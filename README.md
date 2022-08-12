@@ -6,6 +6,9 @@ https://aws.amazon.com/solutions/implementations/aws-waf-security-automations/
 
 ## Target Architecture
 
+<img width="951" alt="image" src="https://user-images.githubusercontent.com/111126012/184378602-b8feebb5-e5db-41d9-a296-0580d21f73fc.png">
+
+
 ## Prerequisites
 
 1. An active AWS account.
