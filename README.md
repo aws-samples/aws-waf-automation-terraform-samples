@@ -1,8 +1,7 @@
-## Terraform-aws-waf-automation Samples
+## AWS WAF Automation Using Terraform
 
-AWS Web Application Firewall (AWS WAF) helps protect web applications from common exploits that can affect application availability, compromise security, or consume excessive resources.AWS WAF allows you to define customisable web security rules and control which traffic to allow to web applications and APIs deployed on Amazon CloudFront, an Application LoadBalancer, or Amazon API Gateway.
+[WAF Automation on AWS](https://aws.amazon.com/solutions/implementations/aws-waf-security-automations/) solution is developed using Terraform which automatically deploys a set of [AWS WAF](https://aws.amazon.com/waf/) rules that filter common web-based attacks. Users can select from preconfigured protective features that define the rules included in an AWS WAF web access control list (web ACL). Once deployed, AWS WAF protects your [Amazon CloudFront](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html) distributions or [Application Load Balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html) by inspecting web requests.
 
-https://aws.amazon.com/solutions/implementations/aws-waf-security-automations/
 
 ## Target Architecture
 
@@ -12,8 +11,8 @@ https://aws.amazon.com/solutions/implementations/aws-waf-security-automations/
 ## Prerequisites
 
 1. An active AWS account.
-2. AWS Command Line Interface (AWS CLI) installed and configured with necessary permissions. For more information about this , refer this documentation 
-3. Terraform installed and configured. For more information about this , refer this documentation
+2. AWS Command Line Interface (AWS CLI) installed and configured with necessary permissions. For more information about this , refer [this documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html). 
+3. Terraform installed and configured. For more information about this , refer [this documentation](https://learn.hashicorp.com/tutorials/terraform/install-cli).
 
 ## Deployment
 
@@ -32,7 +31,7 @@ ENDPOINT = ALB , cloudfront
 
 ## Existing issue:
 
-Error: Error deleting WAFv2 IPSet: WAFOptimisticLockException: AWS WAF couldn’t save your changes because someone changed the resource after you started to edit it. Reapply your changes.
+Error: Error deleting WAFv2 IPSet: WAFOptimisticLockException: AWS WAF couldn’t save your changes because someone changed the resource after you started to edit it. Re-apply your changes.
 
 ## Workaround:
 
