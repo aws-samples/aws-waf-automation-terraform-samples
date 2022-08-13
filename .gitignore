@@ -1,0 +1,4 @@
+# ignore ALL tfstate files
+*.tfstate
+.terraform*
+.terraform/
