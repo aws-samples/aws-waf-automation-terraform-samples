@@ -46,63 +46,63 @@ locals {
 }
 
 variable "USER_AGENT_EXTRA" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "UserAgent"
   type        = string
   default     = "AwsSolution/SO0006/v3.2.0"
 }
 variable "SEND_ANONYMOUS_USAGE_DATA" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "Data collection parameter"
   type        = string
   default     = "yes"
 }
 variable "MetricsURL" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "Metrics URL"
   type        = string
   default     = "https://metrics.awssolutionsbuilder.com/generic"
 }
 variable "SolutionID" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "UserAgent id value"
   type        = string
   default     = "SO0006"
 }
 variable "KEEP_ORIGINAL_DATA" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "S3 original data"
   type        = string
   default     = "No"
 }
 variable "SendAnonymousUsageData" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "Data collection parameter"
   type        = string
   default     = "yes"
 }
 variable "IPRetentionPeriodAllowedParam" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "IP Retention Settings allowed value"
   type        = number
   default     = -1
 }
 variable "IPRetentionPeriodDeniedParam" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "IP Retention Settings denied value"
   type        = number
   default     = -1
 }
 variable "RequestThreshold" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "request threshold for Log Monitoring Settings"
   type        = number
   default     = 100
 }
 variable "WAFBlockPeriod" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "block period for Log Monitoring Settings"
   type        = number
   default     = 240
 }
 variable "ErrorThreshold" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "error threshold for Log Monitoring Settings"
   type        = number
   default     = 50
 }
 
 variable "DeliveryStreamName" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "Name of the Delivery stream value"
   type        = string
   default     = "terraform-kinesis-firehose-extended-s3-test-stream"
 }
@@ -193,7 +193,7 @@ variable "cloudfront_app_access_logs_columns" {
 
 
 variable "SNSEmailParam" {
-  description = "Value of the Name tag for the EC2 instance"
+  description = "SNS notification value"
   type        = string
   default     = ""
 }
