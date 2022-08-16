@@ -68,199 +68,6 @@ resource "aws_kms_key" "wafkey" {
 EOF
 }
 
-# ----------------------------------------------------------------------------------------------------------------------
-# VPC
-# ----------------------------------------------------------------------------------------------------------------------
-/*==== The VPC ======*/
-/*
-resource "aws_vpc" "vpc" {
-  cidr_block = "172.32.0.0/16"
-  #checkov:skip=CKV2_AWS_12: "Ensure the default security group of every VPC restricts all traffic"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-}
-
-
-resource "aws_iam_role" "vpclogrole" {
-  name = "example"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "vpc-flow-logs.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "vpcpolicy" {
-  name = "example"
-  role = aws_iam_role.vpclogrole.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_flow_log" "flowlog" {
-  iam_role_arn    = aws_iam_role.vpclogrole.arn
-  log_destination = aws_cloudwatch_log_group.vpclogwatch.arn
-  traffic_type    = "ALL"
-  vpc_id          = aws_vpc.vpc.id
-}
-
-resource "aws_cloudwatch_log_group" "vpclogwatch" {
-  name              = "vpclogwatch-${random_id.server.hex}"
-  retention_in_days = 90
-  kms_key_id        = aws_kms_key.wafkey.arn
-}
-
-
-resource "aws_subnet" "public_subnet" {
-  vpc_id = aws_vpc.vpc.id
-  #checkov:skip=CKV_AWS_130: "Ensure VPC subnets do not assign public IP by default"
-  cidr_block              = "172.32.0.0/24"
-  map_public_ip_on_launch = true
-}
-
-
-resource "aws_subnet" "privateSubnet1" {
-  vpc_id                  = aws_vpc.vpc.id
-  cidr_block              = "172.32.3.0/24"
-  map_public_ip_on_launch = false
-}
-
-resource "aws_subnet" "privateSubnet2" {
-  vpc_id                  = aws_vpc.vpc.id
-  cidr_block              = "172.32.2.0/24"
-  map_public_ip_on_launch = false
-}
-
-
-resource "aws_internet_gateway" "ig" {
-  vpc_id = aws_vpc.vpc.id
-}
-
-
-resource "aws_route_table" "publicroutetable" {
-  vpc_id = aws_vpc.vpc.id
-}
-
-resource "aws_route" "publicRoute" {
-  route_table_id         = aws_route_table.publicroutetable.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.ig.id
-  depends_on             = [aws_internet_gateway.ig]
-}
-
-
-resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public_subnet.id
-  route_table_id = aws_route_table.publicroutetable.id
-}
-
-resource "aws_nat_gateway" "nat" {
-  allocation_id = aws_eip.lb.id
-  subnet_id     = aws_subnet.public_subnet.id
-  depends_on    = [aws_eip.lb]
-}
-
-resource "aws_eip" "lb" {
-  vpc        = true
-  depends_on = [aws_vpc.vpc]
-}
-
-resource "aws_route_table" "privateroutetable" {
-  vpc_id = aws_vpc.vpc.id
-}
-
-resource "aws_route" "privateroute" {
-  route_table_id         = aws_route_table.privateroutetable.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_nat_gateway.nat.id
-}
-
-resource "aws_route_table_association" "private1" {
-  subnet_id      = aws_subnet.privateSubnet1.id
-  route_table_id = aws_route_table.privateroutetable.id
-}
-
-resource "aws_route_table_association" "prvate2" {
-  subnet_id      = aws_subnet.privateSubnet2.id
-  route_table_id = aws_route_table.privateroutetable.id
-}
-
-
-resource "aws_security_group" "wafsg" {
-  name        = "waff-default-sg"
-  description = "Default security group to allow inbound/outbound from the VPC"
-  vpc_id      = aws_vpc.vpc.id
-  depends_on  = [aws_vpc.vpc]
-
-
-  ingress {
-    from_port   = "80"
-    to_port     = "80"
-    protocol    = "TCP"
-    self        = true
-    cidr_blocks = ["172.31.3.0/24"]
-    description = "Http port access"
-  }
-
-
-  egress {
-    from_port        = "0"
-    to_port          = "0"
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-    description      = "Allow outbound rules"
-  }
-}
-
-*/
-# ----------------------------------------------------------------------------------------------------------------------
-# SNS TOPIC Creation
-# ----------------------------------------------------------------------------------------------------------------------
-/*
-resource "aws_sqs_queue" "terraform_queue" {
-  name = "terraform-sqs-queue-${random_id.server.hex}"
-  #sqs_managed_sse_enabled = true
-  kms_master_key_id = aws_kms_key.wafkey.arn
-}
-
-resource "aws_sqs_queue" "terraform_queue_deadletter" {
-  name              = "terraform-example-deadletter-queue-${random_id.server.hex}"
-  kms_master_key_id = aws_kms_key.wafkey.arn
-  redrive_allow_policy = jsonencode({
-    redrivePermission = "byQueue",
-    sourceQueueArns   = [aws_sqs_queue.terraform_queue.arn]
-  })
-} */
-
 resource "aws_sns_topic" "user_updates" {
   count             = local.SNSEmail == "yes" ? 1 : 0
   name              = join("-", ["AWS-WAF-Security-Automations-IP-Expiration-Notification", "${aws_cloudformation_stack.trigger_codebuild_stack.outputs.UUID}"])
@@ -410,7 +217,6 @@ POLICY
 
 
 resource "aws_s3_bucket" "destination" {
-  #checkov:skip=CKV_AWS_18: "Ensure the S3 bucket has access logging enabled"
   bucket = "tf-test-bucket-${random_id.server.hex}"
   versioning {
     enabled = true
@@ -423,10 +229,6 @@ resource "aws_s3_bucket" "destination" {
       }
     }
   }
- # logging {
-#    target_bucket = aws_s3_bucket.accesslogbucket[0].bucket
- #   target_prefix = "temp_Logs/"
-  #}
 }
 
 resource "aws_s3_bucket_public_access_block" "destinationbucket" {
@@ -914,7 +716,6 @@ resource "aws_wafv2_web_acl" "wafacl" {
   name        = "wafwebacl-rules-${random_id.server.hex}"
   description = "Custom WAFWebACL"
   scope       = local.SCOPE
-  #checkov:skip=CKV2_AWS_31: "Ensure WAF2 has a Logging Configuration"
   default_action {
     allow {}
   }
@@ -1347,17 +1148,6 @@ resource "aws_wafv2_web_acl" "wafacl" {
     }
   }
 }
-
-/*
-resource "aws_wafv2_web_acl_logging_configuration" "wafacl" {
-  log_destination_configs = [aws_cloudwatch_log_group.vpclogwatch.arn]
-  resource_arn            = aws_wafv2_web_acl.wafacl.arn
-  redacted_fields {
-    single_header {
-      name = "user-agent"
-    }
-  }
-}*/
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Dynamo DB table -This DynamoDB table constains transactional ip retention data that will be expired by DynamoDB TTL. The data doesn't need to be retained after its lifecycle ends.
@@ -3305,8 +3095,6 @@ EOT
 
 resource "aws_lambda_function" "helper" {
   function_name = "Helper-Lambda-${random_id.server.hex}"
-  #checkov:skip=CKV_AWS_117: "Ensure that AWS Lambda function is configured inside a VPC"
-  #checkov:skip=CKV_AWS_116: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
   description                    = "This lambda function verifies the main project's dependencies, requirements and implement auxiliary functions"
   role                           = aws_iam_role.LambdaRoleHelper.arn
   handler                        = "helper.lambda_handler"
@@ -3317,13 +3105,6 @@ resource "aws_lambda_function" "helper" {
   memory_size                    = 128
   kms_key_arn                    = aws_kms_key.wafkey.arn
   reserved_concurrent_executions = 1
-  #vpc_config {
-  #  subnet_ids         = [aws_subnet.privateSubnet1.id, aws_subnet.privateSubnet2.id]
-  #  security_group_ids = [aws_security_group.wafsg.id]
-  #}
-  #dead_letter_config {
-  #  target_arn = aws_sqs_queue.terraform_queue_deadletter.arn
-  #}
   tracing_config {
     mode = "Active"
   }
@@ -3338,8 +3119,6 @@ resource "aws_lambda_function" "helper" {
 
 resource "aws_lambda_function" "BadBotParser" {
   count = var.BadBotProtectionActivated == "yes" ? 1 : 0
-  #checkov:skip=CKV_AWS_117: "Ensure that AWS Lambda function is configured inside a VPC"
-  #checkov:skip=CKV_AWS_116: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
   function_name                  = "BadBotParser-Lambda-${random_id.server.hex}"
   description                    = "This lambda function verifies the main project's dependencies, requirements and implement auxiliary functions"
   role                           = aws_iam_role.LambdaRoleBadBot[0].arn
@@ -3351,13 +3130,6 @@ resource "aws_lambda_function" "BadBotParser" {
   memory_size                    = 128
   kms_key_arn                    = aws_kms_key.wafkey.arn
   reserved_concurrent_executions = 1
-  #vpc_config {
-  #  subnet_ids         = [aws_subnet.privateSubnet1.id, aws_subnet.privateSubnet2.id]
-  #  security_group_ids = [aws_security_group.wafsg.id]
-  #}
-  #dead_letter_config {
-  #  target_arn = aws_sqs_queue.terraform_queue_deadletter.arn
-  #}
   tracing_config {
     mode = "Active"
   }
@@ -3384,8 +3156,6 @@ resource "aws_lambda_function" "BadBotParser" {
 
 resource "aws_lambda_function" "MoveS3LogsForPartition" {
   count = local.ScannersProbesAthenaLogParser == "yes" ? 1 : 0
-  #checkov:skip=CKV_AWS_117: "Ensure that AWS Lambda function is configured inside a VPC"
-  #checkov:skip=CKV_AWS_116: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
   function_name                  = "MoveS3LogsForPartition-Lambda-${random_id.server.hex}"
   description                    = "This function is triggered by S3 event to move log files(upon their arrival in s3) from their original location to a partitioned folder structure created per timestamps in file names, hence allowing the usage of partitioning within AWS Athena."
   role                           = aws_iam_role.LambdaRolePartitionS3Logs[0].arn
@@ -3397,13 +3167,6 @@ resource "aws_lambda_function" "MoveS3LogsForPartition" {
   memory_size                    = 512
   kms_key_arn                    = aws_kms_key.wafkey.arn
   reserved_concurrent_executions = 1
-  #vpc_config {
-  #  subnet_ids         = [aws_subnet.privateSubnet1.id, aws_subnet.privateSubnet2.id]
-  #  security_group_ids = [aws_security_group.wafsg.id]
-  #}
-  #dead_letter_config {
-  #  target_arn = aws_sqs_queue.terraform_queue_deadletter.arn
-  #}
   tracing_config {
     mode = "Active"
   }
@@ -3420,8 +3183,6 @@ resource "aws_lambda_function" "MoveS3LogsForPartition" {
 resource "aws_lambda_function" "SetIPRetention" {
   count         = var.IPRetentionPeriod == "yes" ? 1 : 0
   function_name = "SetIPRetention-Lambda-${random_id.server.hex}"
-  #checkov:skip=CKV_AWS_117: "Ensure that AWS Lambda function is configured inside a VPC"
-  #checkov:skip=CKV_AWS_116: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
   description                    = "This lambda function processes CW events for WAF UpdateIPSet API calls. It writes relevant ip retention data into a DynamoDB table."
   role                           = aws_iam_role.LambdaRoleSetIPRetention[0].arn
   handler                        = "set_ip_retention.lambda_handler"
@@ -3432,13 +3193,6 @@ resource "aws_lambda_function" "SetIPRetention" {
   memory_size                    = 128
   kms_key_arn                    = aws_kms_key.wafkey.arn
   reserved_concurrent_executions = 1
-  #vpc_config {
-  #  subnet_ids         = [aws_subnet.privateSubnet1.id, aws_subnet.privateSubnet2.id]
-  #  security_group_ids = [aws_security_group.wafsg.id]
-  #}
-  #dead_letter_config {
-  #  target_arn = aws_sqs_queue.terraform_queue_deadletter.arn
-  #}
   tracing_config {
     mode = "Active"
   }
@@ -3458,8 +3212,6 @@ resource "aws_lambda_function" "SetIPRetention" {
 
 resource "aws_lambda_function" "ReputationListsParser" {
   count = var.ReputationListsProtectionActivated == "yes" ? 1 : 0
-  #checkov:skip=CKV_AWS_117: "Ensure that AWS Lambda function is configured inside a VPC"
-  #checkov:skip=CKV_AWS_116: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
   function_name                  = "ReputationListsParser-Lambda-${random_id.server.hex}"
   description                    = "This lambda function checks third-party IP reputation lists hourly for new IP ranges to block. These lists include the Spamhaus Dont Route Or Peer (DROP) and Extended Drop (EDROP) lists, the Proofpoint Emerging Threats IP list, and the Tor exit node list."
   role                           = aws_iam_role.LambdaRoleReputationListsParser[0].arn
@@ -3471,13 +3223,6 @@ resource "aws_lambda_function" "ReputationListsParser" {
   memory_size                    = 512
   kms_key_arn                    = aws_kms_key.wafkey.arn
   reserved_concurrent_executions = 1
-  #vpc_config {
-  #  subnet_ids         = [aws_subnet.privateSubnet1.id, aws_subnet.privateSubnet2.id]
-  #  security_group_ids = [aws_security_group.wafsg.id]
-  #}
-  #dead_letter_config {
-  #  target_arn = aws_sqs_queue.terraform_queue_deadletter.arn
-  #}
   tracing_config {
     mode = "Active"
   }
@@ -3512,8 +3257,6 @@ resource "aws_lambda_function" "ReputationListsParser" {
 
 resource "aws_lambda_function" "CustomResource" {
   function_name = "CustomResource-Lambda-${random_id.server.hex}"
-  #checkov:skip=CKV_AWS_117: "Ensure that AWS Lambda function is configured inside a VPC"
-  #checkov:skip=CKV_AWS_116: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
   description                    = "Log permissions are defined in the LambdaRoleCustomResource policies"
   role                           = aws_iam_role.LambdaRoleCustomResource.arn
   handler                        = "custom-resource.lambda_handler"
@@ -3524,13 +3267,6 @@ resource "aws_lambda_function" "CustomResource" {
   memory_size                    = 128
   kms_key_arn                    = aws_kms_key.wafkey.arn
   reserved_concurrent_executions = 1
-  #vpc_config {
-  #  subnet_ids         = [aws_subnet.privateSubnet1.id, aws_subnet.privateSubnet2.id]
-  #  security_group_ids = [aws_security_group.wafsg.id]
-  #}
-  #dead_letter_config {
-  #  target_arn = aws_sqs_queue.terraform_queue_deadletter.arn
-  #}
   tracing_config {
     mode = "Active"
   }
@@ -3548,8 +3284,6 @@ resource "aws_lambda_function" "CustomResource" {
 resource "aws_lambda_function" "LogParser" {
   count         = local.LogParser == "yes" ? 1 : 0
   function_name = "LogParser-Lambda-${random_id.server.hex}"
-  #checkov:skip=CKV_AWS_117: "Ensure that AWS Lambda function is configured inside a VPC"
-  #checkov:skip=CKV_AWS_116: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
   description                    = "This function parses access logs to identify suspicious behavior, such as an abnormal amount of errors.It then blocks those IP addresses for a customer-defined period of time."
   role                           = aws_iam_role.LambdaRoleLogParser[0].arn
   handler                        = "log-parser.lambda_handler"
@@ -3560,13 +3294,6 @@ resource "aws_lambda_function" "LogParser" {
   memory_size                    = 512
   kms_key_arn                    = aws_kms_key.wafkey.arn
   reserved_concurrent_executions = 1
-  #vpc_config {
-  #  subnet_ids         = [aws_subnet.privateSubnet1.id, aws_subnet.privateSubnet2.id]
-  #  security_group_ids = [aws_security_group.wafsg.id]
-  #}
-  #dead_letter_config {
-  #  target_arn = aws_sqs_queue.terraform_queue_deadletter.arn
-  #}
   tracing_config {
     mode = "Active"
   }
@@ -3603,8 +3330,6 @@ resource "aws_lambda_function" "LogParser" {
 
 resource "aws_lambda_function" "AddAthenaPartitions" {
   count = local.AthenaLogParser == "yes" ? 1 : 0
-  #checkov:skip=CKV_AWS_117: "Ensure that AWS Lambda function is configured inside a VPC"
-  #checkov:skip=CKV_AWS_116: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
   function_name                  = "AthenaLogParser-Lambda-${random_id.server.hex}"
   description                    = "This function adds a new hourly partition to athena table. It runs every hour, triggered by a CloudWatch event."
   role                           = aws_iam_role.LambdaRoleAddAthenaPartitions[0].arn
@@ -3616,13 +3341,6 @@ resource "aws_lambda_function" "AddAthenaPartitions" {
   memory_size                    = 512
   kms_key_arn                    = aws_kms_key.wafkey.arn
   reserved_concurrent_executions = 1
-  #vpc_config {
-  #  subnet_ids         = [aws_subnet.privateSubnet1.id, aws_subnet.privateSubnet2.id]
-  #  security_group_ids = [aws_security_group.wafsg.id]
-  #}
-  #dead_letter_config {
-  #  target_arn = aws_sqs_queue.terraform_queue_deadletter.arn
-  #}
   tracing_config {
     mode = "Active"
   }
@@ -3636,8 +3354,6 @@ resource "aws_lambda_function" "AddAthenaPartitions" {
 
 resource "aws_lambda_function" "RemoveExpiredIP" {
   count = var.IPRetentionPeriod == "yes" ? 1 : 0
-  #checkov:skip=CKV_AWS_117: "Ensure that AWS Lambda function is configured inside a VPC"
-  #checkov:skip=CKV_AWS_116: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
   function_name                  = "RemoveExpiredIP-Lambda-${random_id.server.hex}"
   description                    = "This function adds a new hourly partition to athena table. It runs every hour, triggered by a CloudWatch event."
   role                           = aws_iam_role.LambdaRoleRemoveExpiredIP[0].arn
@@ -3649,13 +3365,6 @@ resource "aws_lambda_function" "RemoveExpiredIP" {
   memory_size                    = 512
   kms_key_arn                    = aws_kms_key.wafkey.arn
   reserved_concurrent_executions = 1
-  #vpc_config {
-  #  subnet_ids         = [aws_subnet.privateSubnet1.id, aws_subnet.privateSubnet2.id]
-  #  security_group_ids = [aws_security_group.wafsg.id]
-  #}
-  #dead_letter_config {
-  #  target_arn = aws_sqs_queue.terraform_queue_deadletter.arn
-  #}
   tracing_config {
     mode = "Active"
   }
@@ -3674,8 +3383,6 @@ resource "aws_lambda_function" "RemoveExpiredIP" {
 
 resource "aws_lambda_function" "CustomTimer" {
   function_name = "CustomTimer-Lambda-${random_id.server.hex}"
-  #checkov:skip=CKV_AWS_117: "Ensure that AWS Lambda function is configured inside a VPC"
-  #checkov:skip=CKV_AWS_116: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"
   description                    = "This lambda function counts X seconds and can be used to slow down component creation in CloudFormation"
   role                           = aws_iam_role.LambdaRoleCustomTimer.arn
   handler                        = "timer.lambda_handler"
@@ -3686,13 +3393,6 @@ resource "aws_lambda_function" "CustomTimer" {
   memory_size                    = 128
   kms_key_arn                    = aws_kms_key.wafkey.arn
   reserved_concurrent_executions = 1
-  #vpc_config {
-  #  subnet_ids         = [aws_subnet.privateSubnet1.id, aws_subnet.privateSubnet2.id]
-  #  security_group_ids = [aws_security_group.wafsg.id]
-  #}
-  #dead_letter_config {
-  #  target_arn = aws_sqs_queue.terraform_queue_deadletter.arn
-  #}
   tracing_config {
     mode = "Active"
   }
@@ -3739,7 +3439,6 @@ locals {
 
 resource "aws_cloudformation_stack" "trigger_codebuild_stack" {
   name = "custom-resources-stack-${random_id.server.hex}"
-  #checkov:skip=CKV_AWS_124: "Ensure that CloudFormation stacks are sending event notifications to an SNS topic"
   parameters = {
     AthenaLogParser                           = local.AthenaLogParser
     Helperarn                                 = aws_lambda_function.helper.arn
@@ -5112,7 +4811,6 @@ resource "aws_cloudwatch_log_group" "ApiGatewayBadBotStageAccessLogGroup" {
 
 resource "aws_api_gateway_stage" "stage" {
   count = var.BadBotProtectionActivated == "yes" ? 1 : 0
-  #checkov:skip=CKV2_AWS_29: "Ensure public API gateway are protected by WAF"
   deployment_id         = aws_api_gateway_deployment.deployment.id
   rest_api_id           = aws_api_gateway_rest_api.api[0].id
   stage_name            = "ProdStage"
