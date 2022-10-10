@@ -3423,6 +3423,7 @@ locals {
   WAFReputationListsSetIPV6Name = length(aws_wafv2_ip_set.WAFReputationListsSetV6) != 0 ? "${aws_wafv2_ip_set.WAFReputationListsSetV6[0].name}" : "0"
   WAFBadBotSetIPV6Name          = length(aws_wafv2_ip_set.WAFBadBotSetV6) != 0 ? "${aws_wafv2_ip_set.WAFBadBotSetV6[0].name}" : "0"
   AddAthenaPartitionsLambdaarn  = length(aws_lambda_function.AddAthenaPartitions) != 0 ? "${aws_lambda_function.AddAthenaPartitions[0].arn}" : "0"
+  LogParserarn                  = length(aws_lambda_function.LogParser) != 0 ? "${aws_lambda_function.LogParser[0].arn}" : "0"
   GlueAccessLogsDatabase        = length(aws_glue_catalog_database.mydatabase) != 0 ? "${aws_glue_catalog_database.mydatabase[0].name}" : "0"
   GlueWafAccessLogsTable        = length(aws_glue_catalog_table.waf_access_logs_table) != 0 ? "${aws_glue_catalog_table.waf_access_logs_table[0].name}" : "0"
   AthenaWorkGroup               = length(aws_athena_workgroup.WAFAddPartitionAthenaQueryWorkGroup) != 0 ? "${aws_athena_workgroup.WAFAddPartitionAthenaQueryWorkGroup[0].name}" : "0"
@@ -3454,7 +3455,7 @@ resource "aws_cloudformation_stack" "trigger_codebuild_stack" {
     CustomResourcearn                         = aws_lambda_function.CustomResource.arn
     WAFWebACLArn                              = aws_wafv2_web_acl.wafacl.arn
     DeliveryStreamArn                         = local.DeliveryStreamArn
-    LogParser                                 = local.LogParser
+    LogParser                                 = local.LogParserarn
     ScannersProbesAthenaLogParser             = local.ScannersProbesAthenaLogParser
     ScannersProbesLambdaLogParser             = local.ScannersProbesLambdaLogParser
     AccessLoggingBucket                       = aws_s3_bucket.accesslogbucket[0].bucket
