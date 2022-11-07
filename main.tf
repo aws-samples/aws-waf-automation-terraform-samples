@@ -216,32 +216,6 @@ POLICY
 }
 
 
-resource "aws_s3_bucket" "destination" {
-  bucket = "tf-test-bucket-${random_id.server.hex}"
-  versioning {
-    enabled = true
-  }
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.wafkey.arn
-        sse_algorithm     = var.sse_algorithm
-      }
-    }
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "destinationbucket" {
-  bucket                  = aws_s3_bucket.destination.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-  depends_on = [
-    aws_s3_bucket.destination
-  ]
-}
-
 data "aws_iam_policy" "s3Access" {
   arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 }
@@ -269,75 +243,6 @@ POLICY
 resource "aws_iam_role_policy_attachment" "s3bucketaccessrole-policy-attach" {
   role       = "${aws_iam_role.s3bucketaccessrole.name}"
   policy_arn = "${data.aws_iam_policy.s3Access.arn}"
-}
-
-resource "aws_s3_bucket_policy" "destinationpolicy" {
-  bucket = aws_s3_bucket.destination.id
-
-  policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-          {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": [
-                "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${aws_iam_role.s3bucketaccessrole.name}"
-                ]
-            },
-            "Action": "s3:*",
-            "Resource": [
-                "${aws_s3_bucket.destination.arn}",
-                "${aws_s3_bucket.destination.arn}/*"
-            ]
-        },
-        {
-            "Sid": "HttpsOnly",
-            "Effect": "Deny",
-            "Principal": "*",
-            "Action": "s3:*",
-            "Resource": [
-                "${aws_s3_bucket.destination.arn}",
-                "${aws_s3_bucket.destination.arn}/*"
-            ],
-            "Condition": {
-                "Bool": {
-                    "aws:SecureTransport": "false"
-                }
-            }
-        }
-    ]
-}
-POLICY
-  depends_on = [
-    aws_s3_bucket.destination
-  ]
-}
-
-resource "aws_s3_bucket_replication_configuration" "replication" {
-  count      = local.HttpFloodProtectionLogParserActivated == "yes" ? 1 : 0
-  depends_on = [aws_s3_bucket.WafLogBucket]
-
-  role   = aws_iam_role.replication[0].arn
-  bucket = aws_s3_bucket.WafLogBucket[0].id
-
-  rule {
-    id = "foobar"
-
-    filter {
-      prefix = "foo"
-    }
-    delete_marker_replication {
-      status = "Disabled"
-    }
-
-    status = "Enabled"
-
-    destination {
-      bucket        = aws_s3_bucket.destination.arn
-      storage_class = "STANDARD"
-    }
-  }
 }
 
 resource "aws_iam_role" "replication" {
@@ -389,15 +294,6 @@ resource "aws_iam_policy" "replication" {
       "Resource": [
         "${aws_s3_bucket.WafLogBucket[0].arn}/*"
       ]
-    },
-    {
-      "Action": [
-        "s3:ReplicateObject",
-        "s3:ReplicateDelete",
-        "s3:ReplicateTags"
-      ],
-      "Effect": "Allow",
-      "Resource": "${aws_s3_bucket.destination.arn}/*"
     }
   ]
 }
@@ -426,10 +322,6 @@ resource "aws_s3_bucket" "accesslogbucket" {
         sse_algorithm = var.sse_algorithm
       }
     }
-  }
-  logging {
-    target_bucket = aws_s3_bucket.destination.bucket
-    target_prefix = "Logs2/${random_id.server.hex}-accesslogging"
   }
 }
 
@@ -489,34 +381,6 @@ POLICY
   ]
 }
 
-
-resource "aws_s3_bucket_replication_configuration" "replicationaccesslog" {
-  count      = local.LogParser == "yes" ? 1 : 0
-  depends_on = [aws_s3_bucket.accesslogbucket]
-
-  role   = aws_iam_role.replicationaccesslog[0].arn
-  bucket = aws_s3_bucket.accesslogbucket[0].id
-
-  rule {
-    id = "foobar"
-
-    filter {
-      prefix = "foo"
-    }
-
-    delete_marker_replication {
-      status = "Disabled"
-    }
-
-    status = "Enabled"
-
-    destination {
-      bucket        = aws_s3_bucket.destination.arn
-      storage_class = "STANDARD"
-    }
-  }
-}
-
 resource "aws_iam_role" "replicationaccesslog" {
   count = local.LogParser == "yes" ? 1 : 0
   name  = "tf-iam-role-replication-${random_id.server.hex}"
@@ -565,15 +429,6 @@ resource "aws_iam_policy" "replicationaccesslog" {
       "Resource": [
         "${aws_s3_bucket.accesslogbucket[0].arn}/*"
       ]
-    },
-    {
-      "Action": [
-        "s3:ReplicateObject",
-        "s3:ReplicateDelete",
-        "s3:ReplicateTags"
-      ],
-      "Effect": "Allow",
-      "Resource": "${aws_s3_bucket.destination.arn}/*"
     }
   ]
 }
