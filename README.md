@@ -21,6 +21,9 @@ terraform init
 terraform plan -var-file="testing.tfvars"
 terraform apply -var-file="testing.tfvars"
 ```
+
+Check out this APG Pattern for detailed deployment instructions: [Deploy the Security Automations for AWS WAF solution by using Terraform](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/deploy-the-security-automations-for-aws-waf-solution-by-using-terraform.html)
+
 ## Types of inputs:
 
 ```
